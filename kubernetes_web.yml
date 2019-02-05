@@ -1,0 +1,55 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: time-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: time-web
+  template:
+    metadata:
+      labels:
+        app: time-web
+    spec:
+      containers:
+      - name: time-web-server
+        image: riceo/oracle-demo-zipkin-python:master
+        command: ["flask"]
+        args: ["run", "--host=0.0.0.0"]
+        env:
+            - name: FLASK_DEBUG
+              value: "1"
+            - name: FLASK_RUN_PORT
+              value: "5001"
+            - name: ZIPKIN_DSN
+              value: "http://zipkin-api:9411/api/v1/spans"
+            - name: FLASK_APP
+              value: "web.py"
+            - name: FLASK_APP
+              value: "web.py"
+            - name: TIME_API_URL
+              value: "http://time-api:5000"
+        imagePullPolicy: Always
+        ports:
+        - name: time-web-server
+          containerPort: 5001
+          protocol: TCP
+---
+# Service Definition
+apiVersion: v1
+kind: Service
+metadata:
+  name: time-web
+  labels:
+    app: time-web
+spec:
+  type: NodePort
+  ports:
+  - port: 5001
+    targetPort: 5001
+    protocol: TCP
+    nodePort: 30501
+    name: http
+  selector:
+    app: time-web
